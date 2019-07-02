@@ -1,29 +1,16 @@
 
 library(shiny)
 source("plotTest.R")
+source("testUI.R")
 
-ui <- fluidPage(
-  
-  titlePanel("Old Faithful Geyser Data"),
-  
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("bins",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
-    ),
-    
-    mainPanel(
-      plotOutput("distPlot")
-    )
-  )
-)
+df <- read.csv("risk_factors_cervical_cancer_Copie.csv", header = TRUE, sep = ";")
+
+
+ui <- function.UI()
 
 server <- function(input, output) {
   
-  output$distPlot <- function.plotTest(input$bins)
+  output$df <- function.table(df)
   
 }
 
