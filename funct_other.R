@@ -14,6 +14,10 @@ function.downloadFile <- function(tabCosts) {
 }
 
 
+function.saveDataInFile <- function(costsTab, file){
+  write.csv(hot_to_r(costsTab), file,row.names = FALSE)
+  return(as.data.frame(read.csv(file)))
+}
 
 
 

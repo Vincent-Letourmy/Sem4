@@ -129,8 +129,8 @@ function.body <- function(){
                 helpText("Editable table : Choose costs and validate"),
                 rHandsontableOutput("costsTab"),
                 tags$br(),
-                actionButton("saveBtn","Validate"),
-                downloadButton('downloadData', 'Download')
+                uiOutput("validate"),
+                uiOutput("downloadButton")
             ),
             tags$hr(),
             uiOutput("step4button")

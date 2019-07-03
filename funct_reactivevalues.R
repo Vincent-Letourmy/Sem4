@@ -12,6 +12,8 @@ function_reactiveValues <- function() {
                  columnSelected = NULL,
                  
                  tabCosts = NULL,
+                 validate = FALSE,
+                 
                  resultData = NULL, 
                  accuracy = NULL, 
                  accuracyTab = NULL,

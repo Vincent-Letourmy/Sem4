@@ -1,3 +1,4 @@
+source("funct_CVNaiveBayes.R")
 
 function.fileInput <- function(){
   fileInput("fileCSV", "CSV File",
@@ -8,10 +9,14 @@ function.fileInput <- function(){
 }
 
 function.loadFile <- function(file, header, sep, quote){
-  read.csv(file,
+  df <- read.csv(file,
            header = header, 
            sep = sep,
            quote = quote)
+  for (i in names(df)) {
+    df[,i] <- as.character(df[,i])
+  }
+  return(df)
 }
 
 function.selectionColumn <- function(df){

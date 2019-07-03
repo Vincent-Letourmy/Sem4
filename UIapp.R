@@ -28,6 +28,7 @@ server <- function(input, output, session) {
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Buttons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
 
+  
   output$uploadbutton <- renderUI({
     actionButton("uploadbutton","Upload")
   })
@@ -37,6 +38,7 @@ server <- function(input, output, session) {
     v$dataframe_initialisation <- function.loadFile(infile$datapath, input$header , input$sep , input$quote)
   })
   
+  
 
   output$demobutton <- renderUI({
     actionButton("demobutton","Upload a Demo")
@@ -44,6 +46,7 @@ server <- function(input, output, session) {
   observeEvent(input$demobutton,{
     v$dataframe_initialisation <- function.loadFile("risk_factors_cervical_cancer_Copie.csv", input$header , input$sep , input$quote)
   })
+  
   
 
   output$nextPanelParameters <- renderUI({
@@ -53,16 +56,14 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "tabsetInitialisation", selected = "parameters")
   })
   
+  
 
   output$step2button <- renderUI({
     if (is.null(v$dataframe_initialisation)) return (NULL)
     actionButton("step2button","Go to Step 2")
   })
   observeEvent(input$step2button,{
-    v$dataframe_dataqualityconfig <- v$dataframe_initialisation
-    v$dataframe_dataqualityconfigBis <- v$dataframe_initialisation
-    v$dataframe_initialisation <- function.as_factor(v$dataframe_initialisation)
-    
+    v$dataframe_dataqualityconfig <- v$dataframe_dataqualityconfigBis <- v$dataframe_initialisation
     updateTabItems(session,"sidebarmenu", "dataqualityconfig")
   })
   
@@ -73,15 +74,19 @@ server <- function(input, output, session) {
   )
   
   
+  
   output$parametersbox <- function_parametersBox()
+  
   
   
   output$selectcolumn <- renderUI(
     function.selectionColumn(v$dataframe_initialisation)
   )
+  
   observeEvent(input$selectcolumn,{
     v$columnSelected <- input$selectcolumn
   })
+  
   
 
   output$foldselection <- renderUI({
@@ -111,6 +116,7 @@ server <- function(input, output, session) {
   })
   
 
+  
   output$removecolumnbutton <- renderUI({
     if(is.null(v$dataframe_dataqualityconfig)) return (NULL)
     actionButton("removecolumnbutton","Remove")
@@ -118,6 +124,7 @@ server <- function(input, output, session) {
   observeEvent(input$removecolumnbutton,{
     v$dataframe_dataqualityconfig <- function.removeColumns(v$resNAsBarChart, v$dataframe_dataqualityconfigBis, input$pourcentageSelection)
   })
+  
   
 
   output$removeNAsbutton <- renderUI({
@@ -130,17 +137,14 @@ server <- function(input, output, session) {
   })
   
 
+  
   output$step3button <- renderUI({
     if (is.null(v$dataframe_dataqualityconfig)) return (NULL)
     actionButton("step3button","Go to Step 3")
   })
   observeEvent(input$step3button,{
-    
-    v$dataframe_dataqualityconfig <- function.as_factor(v$dataframe_dataqualityconfig)
-    v$dataframe_costsconfig <- v$dataframe_dataqualityconfig
-    
+    v$dataframe_costsconfig <- function.as_factor(v$dataframe_dataqualityconfig)
     v$tabCosts <- function.tabNaiveBayes(v$dataframe_costsconfig, v$columnSelected)
-    
     updateTabItems(session,"sidebarmenu", "costsconfig")
   })
   
@@ -158,6 +162,7 @@ server <- function(input, output, session) {
     v$dataframe_dataqualityconfig,
     options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
   )
+  
   
 
   output$NAsBarChart <- renderPlotly({
@@ -179,10 +184,44 @@ server <- function(input, output, session) {
   
   #____________________________________________________ Costs Config __________________________________________________________________________________________________________________________________________#
   
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Button ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Renders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+
+  output$tabLoadedCostsConfig <- renderDataTable(
+    v$dataframe_costsconfig,
+    options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
+  )
+  
+  
+
+  output$costsTab <- renderRHandsontable({
+    rhandsontable(v$tabCosts)
+  })
+  
+  
+  output$downloadData <- function.downloadFile(v$tabCosts)
+  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Buttons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+  
+  output$downloadButton <- renderUI({
+    if (v$validate == FALSE) return(NULL)
+    downloadButton('downloadData', 'Download Costs Tab')
+  })
+  
+  output$validate <- renderUI(
+    actionButton("validate","Validate"),
+  )
+  observeEvent(input$validate,{
+    v$tabCosts <- function.saveDataInFile(input$costsTab, "MyData.csv")
+    v$validate <- TRUE
+  })
+
   
   output$step4button <- renderUI({
-    if (is.null(v$dataframe_costsconfig)) return (NULL)
+    if (is.null(v$dataframe_costsconfig) || v$validate == FALSE) return (NULL)
     actionButton("step4button","Results")
   })
   observeEvent(input$step4button,{
@@ -201,42 +240,22 @@ server <- function(input, output, session) {
     v$resultData = sum(resultats$restab$cost * v$tabCosts$cost) * 5 
     v$accuracy <<- mean(resultats$moy)
     v$accuracyTab <<- resultats$moy
-
-  
+    
+    
     updateTabItems(session,"sidebarmenu", "results")
   })
-  
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Renders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-  
-
-  output$tabLoadedCostsConfig <- renderDataTable(
-    v$dataframe_costsconfig,
-    options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
-  )
-  
-
-    output$costsTab <- renderRHandsontable({
-    rhandsontable(v$tabCosts)
-  })
-  observeEvent(input$saveBtn, {
-    write.csv(hot_to_r(input$costsTab), file = "MyData.csv",row.names = FALSE)
-    v$tabCosts <- as.data.frame(read.csv("MyData.csv"))
-    
-  })
-  
-
-  output$downloadData <- function.downloadFile(v$tabCosts)
   
   
   #_______________________________________________________ Compare Results INITIAL / DQ config ____________________________________________________________________________________________#
   
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SAVED DATA QUALITY (initial) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
-  # SAVED DATA QUALITY (initial) 
   
-  
-  output$accuracyvalueSaved <- renderValueBox({
+  output$accuracyvalueSaved <- renderValueBox(
     function.accuracyBoxWithConfInterval(v$accuracyTabSaved, v$accuracySaved)
-  })
+  )
+  
   
   
   output$accuracyCVBarSaved <- renderPlotly (
@@ -244,15 +263,17 @@ server <- function(input, output, session) {
   )
   
   
-  output$boxBarChartSaved <- renderUI({
+  
+  output$boxBarChartSaved <- renderUI(
     function.BarChartBox(v$accuracySaved, "accuracyCVBarSaved")
-  })
+  )
+  
   
 
-  output$costResultsValueSaved <- renderValueBox({
-    print(v$resultDataSaved)
+  output$costResultsValueSaved <- renderValueBox(
     function.costsResultsVaue(v$resultDataSaved)
-  })
+  )
+  
   
 
   output$tabLoadedResultsSaved <- renderDataTable(
@@ -260,12 +281,15 @@ server <- function(input, output, session) {
     options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
   )
   
-  # DATA QUALITY config 
+  
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DATA QUALITY config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
   
   output$accuracyvalue <- renderValueBox(
     function.accuracyBoxWithConfInterval(v$accuracyTab, v$accuracy)
   )
+  
   
 
   output$accuracyCVbar <- renderPlotly (
@@ -275,10 +299,12 @@ server <- function(input, output, session) {
     function.BarChartBox(v$accuracy, "accuracyCVbar")
   )
   
+  
 
   output$costresultsvalue <- renderValueBox(
     function.costsResultsVaue(v$resultData)
   )
+  
   
 
   output$tabLoadedResults <- renderDataTable(
