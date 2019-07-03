@@ -32,3 +32,18 @@ function.removeRows <- function(df){
   return(df)
 
 }
+
+function.barChartMissingValues <- function(df){
+  res <- 0
+  for (i in names(df)) {
+    col <- df[,i]
+    
+    a <- 0
+    for (j in col) {
+      if(is.na(j) || j == "") a = a + 1
+    }
+    res[i] = round(a / length(col) * 100,digits = 2)
+  }
+  res <- res[-1]
+  return(res)
+}

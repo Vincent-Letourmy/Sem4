@@ -166,23 +166,17 @@ server <- function(input, output, session) {
   
 
   output$NAsBarChart <- renderPlotly({
-    res <- 0
-    for (i in names(v$dataframe_dataqualityconfig)) {
-      col <- v$dataframe_dataqualityconfig[,i]
-      
-      a <- 0
-      for (j in col) {
-        if(is.na(j) || j == "") a = a + 1
-      }
-      res[i] = round(a / length(col) * 100,digits = 2)
-    }
-    v$resNAsBarChart <- res[-1]
-    plot_ly(x = names(v$resNAsBarChart), 
-            y = v$resNAsBarChart, 
+    res <- function.barChartMissingValues(v$dataframe_dataqualityconfig)
+    v$resNAsBarChart <- res
+    res <- sort(res, decreasing = TRUE)
+    col_names <- names(res)
+    
+    plot_ly(x = factor(col_names, levels = col_names), 
+            y = res, 
             name = "Pourcentage of NAs in each column", 
             type = "bar"
     ) %>% 
-            layout(xaxis = list(title = "Column's names"),
+            layout(xaxis = list(title = "Column's name"),
                    yaxis = list(title = "Pourcentage of missing values"))
     
   })
@@ -231,8 +225,10 @@ server <- function(input, output, session) {
     actionButton("step4button","Results")
   })
   observeEvent(input$step4button,{
-    v$dataframe_results <- v$dataframe_costsconfig
     
+    #As factor pour faire tourner naive Bayes
+    v$dataframe_results <- v$dataframe_costsconfig
+    v$dataframe_initialisation <- function.as_factor(v$dataframe_initialisation)
     
     # Naive Bayes INITIAL 
     resultats <- function.CVNaiveBayes(v$dataframe_initialisation,input$selectcolumn,v$tabCosts,input$foldselection)
