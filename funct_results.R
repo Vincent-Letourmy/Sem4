@@ -53,3 +53,29 @@ function.costsResultsVaue <- function(resultData){
     ,icon = icon("menu-hamburger",lib='glyphicon')
     ,color = "green")
 }
+
+function.nbMissingValues <- function(df){
+  comp <- 0
+  for (i in df){
+    for (j in i){
+      if (j == "" || is.na(j)) comp = comp + 1
+    }
+  }
+  return(comp)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

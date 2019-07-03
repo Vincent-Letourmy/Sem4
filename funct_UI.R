@@ -158,6 +158,7 @@ function.body <- function(){
                    uiOutput("costResultsValueSaved"),
                    tags$hr()
                    ,
+                   uiOutput("infodataSaved"),
                    dataTableOutput("tabLoadedResultsSaved")
             ),
             
@@ -171,6 +172,7 @@ function.body <- function(){
                    uiOutput("costresultsvalue"),
                    tags$hr()
                    ,
+                   uiOutput("infodata"),
                    dataTableOutput("tabLoadedResults")
             )
             

@@ -276,6 +276,13 @@ server <- function(input, output, session) {
     function.costsResultsVaue(v$resultDataSaved)
   )
   
+  output$infodataSaved <- renderUI({
+    comp <- function.nbMissingValues(v$dataframe_initialisation)
+    fluidRow(
+      h4("Initial table : ", ncol(v$dataframe_initialisation), " x ", nrow(v$dataframe_initialisation), "  (columns x rows)"),
+      h4("Missing Values : ", comp)
+    )
+  })
   
 
   output$tabLoadedResultsSaved <- renderDataTable(
@@ -308,7 +315,15 @@ server <- function(input, output, session) {
   )
   
   
+  output$infodata <- renderUI({
+    comp <- function.nbMissingValues(v$dataframe_results)
+    fluidRow(
+      h4("New table : ", ncol(v$dataframe_results), " x ", nrow(v$dataframe_results), "  (columns x rows)"),
+      h4("Missing Values : ", comp)
+    )
+  })
 
+  
   output$tabLoadedResults <- renderDataTable(
     v$dataframe_results,
     options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
