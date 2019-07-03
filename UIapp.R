@@ -177,7 +177,13 @@ server <- function(input, output, session) {
       res[i] = round(a / length(col) * 100,digits = 2)
     }
     v$resNAsBarChart <- res[-1]
-    plot_ly(x = names(v$resNAsBarChart), y = v$resNAsBarChart, name = "Pourcentage of NAs in each column", type = "bar")
+    plot_ly(x = names(v$resNAsBarChart), 
+            y = v$resNAsBarChart, 
+            name = "Pourcentage of NAs in each column", 
+            type = "bar"
+    ) %>% 
+            layout(xaxis = list(title = "Column's names"),
+                   yaxis = list(title = "Pourcentage of missing values"))
     
   })
   
