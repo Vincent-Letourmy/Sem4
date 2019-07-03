@@ -151,11 +151,11 @@ function.body <- function(){
             column(6,
                    h1("Results - Initial"),
                    tags$hr(),
-                   uiOutput("accurancyvalueSaved"),
+                   uiOutput("accuracyvalueSaved"),
                    tags$hr(),
-                   uiOutput("boxBarCharSaved"),
+                   uiOutput("boxBarChartSaved"),
                    tags$hr(),
-                   uiOutput("costresultsvalueSaved"),
+                   uiOutput("costResultsValueSaved"),
                    tags$hr()
                    ,
                    dataTableOutput("tabLoadedResultsSaved")

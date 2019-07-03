@@ -70,7 +70,12 @@ function.tabNaiveBayes <- function(df, colName){
   
 }
 
-
+function.as_factor <- function(df){
+  for (i in names(df)) {
+    df[,i] <- as.factor(df[,i])
+  }
+  return(df)
+}
 
 
 
