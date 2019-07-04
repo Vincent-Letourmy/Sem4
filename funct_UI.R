@@ -92,6 +92,7 @@ function.body <- function(){
                 tags$br(),
                 box(width = 12,
                     h4("Then, do you want to remove each row where there is at least one missing value ?"),
+                    uiOutput("numberRowsWillRemove"),
                     uiOutput("removeNAsbutton")
                 ),
                 uiOutput("step3button")

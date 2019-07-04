@@ -50,6 +50,7 @@ server <- function(input, output, session) {
   
 
   output$nextPanelParameters <- renderUI({
+    if (is.null(v$dataframe_initialisation)) return (NULL)
     actionButton("nextPanelParameters","Next")
   })
   observeEvent(input$nextPanelParameters,{
@@ -132,8 +133,13 @@ server <- function(input, output, session) {
     actionButton("removeNAsbutton","Remove")
   })
   observeEvent(input$removeNAsbutton,{
-    v$dataframe_dataqualityconfig <- function.removeRows(v$dataframe_dataqualityconfig)
+    v$dataframe_dataqualityconfig <- function.removeRows(v$dataframe_dataqualityconfig, "")
     updateTabsetPanel(session, "tabset", selected = "database")
+  })
+  
+  output$numberRowsWillRemove <- renderUI({
+    nb <- function.removeRows(v$dataframe_dataqualityconfig, "number")
+    paste("(Number of rows will be removed : ", nb,"/",nrow(v$dataframe_dataqualityconfig),")")
   })
   
 
@@ -166,18 +172,18 @@ server <- function(input, output, session) {
   
 
   output$NAsBarChart <- renderPlotly({
-    res <- function.barChartMissingValues(v$dataframe_dataqualityconfig)
-    v$resNAsBarChart <- res
+    v$resNAsBarChart <-res <- function.barChartMissingValues(v$dataframe_dataqualityconfig)
     res <- sort(res, decreasing = TRUE)
     col_names <- names(res)
     
     plot_ly(x = factor(col_names, levels = col_names), 
             y = res, 
-            name = "Pourcentage of NAs in each column", 
-            type = "bar"
+            type = "bar",
+            color = res > input$pourcentageSelection, colors = c("#132B43", "#56B1F7")
     ) %>% 
-            layout(xaxis = list(title = "Column's name"),
-                   yaxis = list(title = "Pourcentage of missing values"))
+      layout(xaxis = list(title = "Column's name"),
+             yaxis = list(title = "Pourcentage of missing values"))
+    
     
   })
   

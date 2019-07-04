@@ -1,1 +1,1 @@
-# Sem4 : test functions
+# Sem4 : Functional organisation
