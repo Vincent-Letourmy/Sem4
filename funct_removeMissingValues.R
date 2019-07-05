@@ -1,9 +1,15 @@
 
-function.removeColumns <- function(resNas, df, pourcent){
+function.removeColumns <- function(resNas, df, pourcent, columnSelected){
   
   resColo <- 0
+  
   for (i in names(resNas)){
-    if (resNas[i] < pourcent) resColo[i] = i
+    if (i == columnSelected){
+      resColo[i] = i
+    }
+    else if (resNas[i] < pourcent){
+      resColo[i] = i
+    }
   }
   resColo <- resColo[-1]
   df <- df[,resColo]

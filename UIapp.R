@@ -49,23 +49,13 @@ server <- function(input, output, session) {
   
   
 
-  output$nextPanelParameters <- renderUI({
-    if (is.null(v$dataframe_initialisation)) return (NULL)
-    actionButton("nextPanelParameters","Next")
-  })
-  observeEvent(input$nextPanelParameters,{
-    updateTabsetPanel(session, "tabsetInitialisation", selected = "parameters")
-  })
-  
-  
-
   output$step2button <- renderUI({
     if (is.null(v$dataframe_initialisation)) return (NULL)
     actionButton("step2button","Go to Step 2")
   })
   observeEvent(input$step2button,{
-    v$dataframe_dataqualityconfig <- v$dataframe_dataqualityconfigBis <- v$dataframe_initialisation
-    updateTabItems(session,"sidebarmenu", "dataqualityconfig")
+    v$dataframe_targetconfig <- v$dataframe_initialisation
+    updateTabItems(session,"sidebarmenu", "targetconfig")
   })
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Selections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -75,24 +65,9 @@ server <- function(input, output, session) {
   )
   
   
-  
   output$parametersbox <- function_parametersBox()
   
   
-  
-  output$selectcolumn <- renderUI(
-    function.selectionColumn(v$dataframe_initialisation)
-  )
-  
-  observeEvent(input$selectcolumn,{
-    v$columnSelected <- input$selectcolumn
-  })
-  
-  
-
-  output$foldselection <- renderUI({
-    sliderInput("foldselection","Number of fold for Cross Validation (Naive Bayes)", 1,50,10)
-  })
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Renders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
@@ -102,9 +77,80 @@ server <- function(input, output, session) {
     options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
   )
   
+  #____________________________________________________ Target Config __________________________________________________________________________________________________________________________________________#
+  
+
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Selections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+  
+  output$selectcolumn <- renderUI(
+    function.selectionColumn(v$dataframe_initialisation)
+  )
+  observeEvent(input$selectcolumn,{
+    v$columnSelected <- input$selectcolumn
+  })
+  
+  
+  output$foldselection <- renderUI({
+    sliderInput("foldselection","Number of fold for Cross Validation (Naive Bayes)", 1,50,10)
+  })
+  
+  output$checkBox <- renderUI({ 
+    
+    v$dataframe_withoutcolselected <- v$dataframe_targetconfig[,!names(v$dataframe_targetconfig)%in%v$columnSelected]
+    newList <- rev(names(v$dataframe_withoutcolselected))
+    checkboxGroupInput("targets",label = "Select target(s)", choices = newList)
+  })
+  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Buttons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+  
+  output$nextButton <- renderUI({
+    actionButton("nextButton","Next")
+  })
+  observeEvent(input$nextButton,{
+    updateTabsetPanel(session, "tabSetTarget", "removecolumn")
+  })
+
+  
+  output$ValidCheckBox <- renderUI({
+      actionButton("OK","Remove")
+  })
+  observeEvent(input$OK,{
+    if (!is.null(input$targets)){
+      
+      list <- data.frame(Column = input$targets)
+      v$dataframe_targetconfig <- v$dataframe_targetconfig[,!names(v$dataframe_targetconfig)%in%list$Column]
+      
+    }
+  })
+  
+  
+  output$toDQConfigStepButton <- renderUI({
+    
+    actionButton("toDQConfigStepButton","Next Step")
+  })
+  observeEvent(input$toDQConfigStepButton,{
+    v$dataframe_dataqualityconfig <- v$dataframe_dataqualityconfigBis <- v$dataframe_targetconfig
+    updateTabItems(session,"sidebarmenu", "dataqualityconfig")
+  })
+  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Renders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  
+  output$tabLoadedTargetConfig <- renderDataTable(
+    v$dataframe_targetconfig,
+    options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
+  )
+  
+  
   
   
   #__________________________________________________ DataQuality Config _________________________________________________________________________________________________________________________________________#
+  
+  
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Buttons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
@@ -123,7 +169,7 @@ server <- function(input, output, session) {
     actionButton("removecolumnbutton","Remove")
   })
   observeEvent(input$removecolumnbutton,{
-    v$dataframe_dataqualityconfig <- function.removeColumns(v$resNAsBarChart, v$dataframe_dataqualityconfigBis, input$pourcentageSelection)
+    v$dataframe_dataqualityconfig <- function.removeColumns(v$resNAsBarChart, v$dataframe_dataqualityconfigBis, input$pourcentageSelection, v$columnSelected)
   })
   
   
@@ -146,7 +192,7 @@ server <- function(input, output, session) {
   
   output$step3button <- renderUI({
     if (is.null(v$dataframe_dataqualityconfig)) return (NULL)
-    actionButton("step3button","Go to Step 3")
+    actionButton("step3button","Next Step")
   })
   observeEvent(input$step3button,{
     v$dataframe_costsconfig <- function.as_factor(v$dataframe_dataqualityconfig)
@@ -186,6 +232,7 @@ server <- function(input, output, session) {
     
     
   })
+  
   
   
   #____________________________________________________ Costs Config __________________________________________________________________________________________________________________________________________#
@@ -234,10 +281,11 @@ server <- function(input, output, session) {
     
     #As factor pour faire tourner naive Bayes
     v$dataframe_results <- v$dataframe_costsconfig
-    v$dataframe_initialisation <- function.as_factor(v$dataframe_initialisation)
+    v$dataframe_targetconfig <- function.as_factor(v$dataframe_targetconfig)
+    
     
     # Naive Bayes INITIAL 
-    resultats <- function.CVNaiveBayes(v$dataframe_initialisation,input$selectcolumn,v$tabCosts,input$foldselection)
+    resultats <- function.CVNaiveBayes(v$dataframe_targetconfig,input$selectcolumn,v$tabCosts,input$foldselection)
     v$resultDataSaved = sum(resultats$restab$cost * v$tabCosts$cost) * 5 
     v$accuracySaved <<- mean(resultats$moy)
     v$accuracyTabSaved <<- resultats$moy
@@ -257,7 +305,7 @@ server <- function(input, output, session) {
   #_______________________________________________________ Compare Results INITIAL / DQ config ____________________________________________________________________________________________#
   
 
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SAVED DATA QUALITY (initial) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Results initial ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
   
   output$accuracyvalueSaved <- renderValueBox(
@@ -283,22 +331,22 @@ server <- function(input, output, session) {
   )
   
   output$infodataSaved <- renderUI({
-    comp <- function.nbMissingValues(v$dataframe_initialisation)
+    comp <- function.nbMissingValues(v$dataframe_targetconfig)
     fluidRow(
-      h4("Initial table : ", ncol(v$dataframe_initialisation), " x ", nrow(v$dataframe_initialisation), "  (columns x rows)"),
+      h4("Initial table : ", ncol(v$dataframe_targetconfig), " x ", nrow(v$dataframe_targetconfig), "  (columns x rows)"),
       h4("Missing Values : ", comp)
     )
   })
   
 
   output$tabLoadedResultsSaved <- renderDataTable(
-    v$dataframe_initialisation,
+    v$dataframe_targetconfig,
     options = list(scrollX = TRUE,pageLength = 14, searching = FALSE)
   )
   
   
 
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DATA QUALITY config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Results with DATA QUALITY config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
   
   
   output$accuracyvalue <- renderValueBox(

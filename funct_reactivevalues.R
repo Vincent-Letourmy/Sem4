@@ -1,8 +1,15 @@
 function_reactiveValues <- function() {
   reactiveValues(dataframe_initialisation = NULL,
+                 
+                 dataframe_targetconfig = NULL,
+                 
+                 dataframe_withoutcolselected = NULL,
+
                  dataframe_dataqualityconfig = NULL,
                  dataframe_dataqualityconfigBis = NULL,
+                 
                  dataframe_costsconfig = NULL,
+                 
                  dataframe_results = NULL,
                  
                  dataframe_comparedataqualityconfig = NULL,

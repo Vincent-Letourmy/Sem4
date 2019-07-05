@@ -21,6 +21,10 @@ function.saveDataInFile <- function(costsTab, file){
 
 
 
+function.selectColumn <- function(list){
+  
+}
+
 
 
 
